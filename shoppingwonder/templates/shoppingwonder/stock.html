@@ -1,0 +1,40 @@
+{% extends "shoppingwonder/layout.html" %}
+
+{% block title %}
+    Stock Management
+{% endblock %}
+
+{% block body %}
+    <div class="collapse navbar-collapse justify-content-center" id="navbarNavAltMarkup">
+        <div class="navbar-nav align-items-center">
+            <a class="nav-link" href="{% url 'stock' %}?v='in_stock'"></a>
+            <a class="nav-link" href="{% url 'stock' %}?v='out_of_stock'"></a>
+            <a class="nav-link" href="{% url 'stock' %}?v='inactive'"></a>
+        </div>
+    </div>
+
+    <div id="in-stock">
+        <h2>Stocks available for sales</h2>
+        <ul class="container product-list d-block">
+            {% for stock in stocks %}
+                <li class="row mb-3 ">
+                    <div class="col-3">
+                        <a class="img-link d-block" href="{% url 'product' product.id %}"><img class="img-thumbnail" src="{{ stock.images.first.imageURL }}"
+                            width="150px" alt="No image"></a>
+                    </div>
+                    <div class="col-9 d-flex align-items-center">
+                        <a class="d-block product-name" href="{% url 'stock' product.id %}">
+                            <span>{{ product.title }}</span><br>
+                            <strong>฿{{ product.RSP|intcomma }}</strong>
+                        </a>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+{% endblock %}
+
+<img src="{{ stock.images.imageURL }}" class="img-thumbnail" alt="No image">
+            {{ stock.title }} | {{ stock.remaining_qty }}
+

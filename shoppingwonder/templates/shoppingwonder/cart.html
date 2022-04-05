@@ -1,0 +1,44 @@
+{% load humanize %}
+          {% for item in cart_items %}
+              <div class="row mb-3">
+                  <div class="col-3 d-flex">
+                  <a class="img-link d-block" href="{% url 'product' item.product.parent_id|default_if_none:item.product.id %}">
+                    <img class="img-thumbnail" src="{{ item.product.images.first.imageURL }}"alt="No image">
+                  </a>
+                  </div>
+                  <div class="col-9">
+                    <div class="row">
+                      <a class="col-12 d-block product-name" href="{% url 'product' item.product.parent_id|default_if_none:item.product.id %}">
+                          <span class="text-break">{{ item.product.title }}</span><br>
+                      </a>
+                    </div>
+                    <div class="row align-items-center mt-1">
+                      <div class="col-4 text-end">฿{{ item.product.RSP|intcomma }}</div>
+                      <div class="col-5 align-items-end">
+
+                        <!-- Cart quantity selection -->
+                        <div class="input-group row">
+                          <button class="btn btn-outline-secondary btn-sm form-2 cart-remove col" id="remove-{{ item.product.id }}"
+                          data-prd-id="{{ item.product.id }}">
+                            <span class="material-icons-outlined small-icons">remove</span>
+                          </button>
+                          <button class="btn btn-sm form-2 text-center col" disabled><strong>{{ item.quantity }}</strong></button>
+                          <!-- <input type="number" class="form-control form-2 text-center" value="{{ item.quantity }}" data-prd-id="{{ item.product.id }}"
+                            min="0" aria-label=""> -->
+                            <!-- Check remaining qty -->
+                          <button class="btn btn-outline-secondary btn-sm form-2 cart-add col" id="add-{{ item.product.id }}"
+                            {% if item.product.remaining_qty <= item.quantity %}disabled{% endif %}
+                            data-prd-id="{{ item.product.id }}">
+                            <span class="material-icons-outlined small-icons">add</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row mt-1 text-end"><strong> ฿{{ item.get_amount|intcomma }}</strong></div>
+                  </div>
+              </div>
+              {% endfor %}
+              <div class="cart-total text-end">
+                  <div class="mt-3 mb-3">TOTAL: <strong>฿{{ cart_amount|intcomma }}</strong></div>
+              </div>
+              

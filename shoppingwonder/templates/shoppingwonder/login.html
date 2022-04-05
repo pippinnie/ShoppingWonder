@@ -1,0 +1,35 @@
+{% extends "shoppingwonder/layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block body %}
+    <div class="mb-3 justify-content-md-center">
+        <div class="col-sm-4 mx-auto">
+            <div class="form-title text-center">
+                <h2>Login</h2>
+            </div>
+            <form action="{% url 'login' %}" method="post">
+                {% if message %}
+                <div class="alert alert-dismissible alert-dark fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+
+                {% csrf_token %}
+                <div>
+                    <label>USERNAME</label>
+                    <input name="username" class="form-control form-1" placeholder="" type="text" autocomplete="off" required autofocus>
+                </div>
+                <div>
+                    <label>PASSWORD</label>
+                    <input name="password" class="form-control form-1" placeholder="" type="password" required autocomplete="off">
+                </div>
+                <p><button class="btn button" type="submit">Log In</button></p>
+            </form>
+                Don't have an account? <a class="" href="{% url 'register' %}">Register</a>
+        </div>
+    </div>
+{% endblock %}

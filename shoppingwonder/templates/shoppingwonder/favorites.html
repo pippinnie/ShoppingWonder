@@ -1,0 +1,29 @@
+{% extends "shoppingwonder/layout.html" %}
+{% load humanize %}
+
+{% block title %}
+    Favorites
+{% endblock %}
+
+{% block body %}
+    <div class="page-narrow">
+        <h1 class="page-title">Favorites</h1>
+        <ul class="container product-list d-block">
+            {% for product in products %}
+            <li class="row mb-3 ">
+                <div class="col-3">
+                    <a class="img-link d-block" href="{% url 'product' product.id %}"><img class="img-thumbnail" src="{{ product.images.first.imageURL }}"
+                        width="150px" alt="No image"></a>
+                </div>
+                <div class="col-9 d-flex align-items-center">
+                    <a class="d-block product-name" href="{% url 'product' product.id %}">
+                        <span>{{ product.title }}</span><br>
+                        <strong>฿{{ product.RSP|intcomma }}</strong>
+                    </a>
+                </div>
+            </li>
+            <hr>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

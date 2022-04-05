@@ -1,0 +1,31 @@
+{% extends "shoppingwonder/layout.html" %}
+{% load static %}
+
+{% block title %}
+  Profile
+{% endblock %}
+
+{% block body %}
+  <div class="page d-flex justify-content-center">
+    <div class="card mb-3" style="max-width: 1000px;">
+      <div class="row g-0">
+        <div class="col-md-6">
+          <img src="https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/makeup-supplies-amidst-shiny-glitter-royalty-free-image-1640037507.jpg" class="card-img-top" alt="...">
+        </div>
+
+        <div class="col-md-6">
+          <div class="card-body bg-light text-dark style" style="height: 333px;">
+            <div>
+              <label>USERNAME</label>
+              <input name="username" class="form-control form-1" disabled value="{{ user.username }}" type="text" autocomplete="off" required >
+          </div>
+          <div>
+              <label>EMAIL</label>
+              <input name="email" class="form-control form-1" disabled value="{{ user.email }}" type="text" autocomplete="off" required>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

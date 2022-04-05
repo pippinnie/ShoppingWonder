@@ -1,0 +1,164 @@
+{% load static humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg" sizes="16x16" href="{% static 'shoppingwonder/images/logo.SVG' %}"/>
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp" rel="stylesheet">
+    <title>ShoppingWonder: {% block title %}{% endblock %}</title>
+
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+      crossorigin="anonymous" />
+    <link href="{% static 'shoppingwonder/styles.css' %}" rel="stylesheet" />
+
+    <!-- jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="{% static 'shoppingwonder/cart.js' %}"></script>
+    {% block script %}{% endblock %}
+  </head>
+
+  <body>
+    <div class="sticky-top">
+      <div class="bd-highlight mt-3 mb-1">
+        <div class="row">
+          <div class="col-sm"></div>
+          <div class="col-lg text-center">
+            <a class="navbar-brand text-center" href="{% url 'index' %}"><img id="logo" src="{% static 'shoppingwonder/images/banner.PNG' %}" /></a>
+          </div>
+          <div class="col-sm d-flex align-items-center justify-content-center">
+            <div class="nav nav-icons">
+              <!-- user icon -->
+              <div class="nav-item user-icon">
+                <a class="nav-link" href="#">
+                  <span class="material-icons big-icons user-icon-icon">account_circle</span>
+                  {% if user.is_authenticated %}
+                    <span class="username"><strong>{{ user.username }}</strong></span>
+                  {% endif %}
+                </a>
+                <div class="user-menu">
+                  {% if user.is_authenticated %}
+                    {% if user.is_staff %}
+                      <a class="dropdown-item" href="{% url 'stocks' %}">Stock Management</a>
+                      <a class="dropdown-item" href="#">Sales Order</a>
+                      <!-- <a class="dropdown-item" href="#">Report</a> -->
+                      <hr class="dropdown-divider" />
+                    {% endif %}
+                    <a class="dropdown-item" href="#">My Purchases</a>
+                    <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
+                    <hr class="dropdown-divider" />
+                    <a class="dropdown-item" href="{% url 'logout' %}">Log Out</a>
+                  {% else %}
+                    <a class="dropdown-item button" href="{% url 'login' %}">Log In</a>
+                    <a class="dropdown-item button" href="{% url 'register' %}">Register</a>
+                  {% endif %}
+                </div>
+              </div>
+
+              {% if user.is_authenticated %}
+                <!-- heart icon -->
+                <div class="nav-item">
+                  <a class="nav-link" href="{% url 'favorites' %}">
+                    <span class="material-icons-outlined big-icons">favorite</span>
+                  </a>
+                </div>
+
+                <!-- cart icon -->
+                <div class="nav-item">
+                  <button id="shopping_bag" class="nav-link cart position-relative" type="button"
+                  data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">
+                  <span class="material-icons big-icons cart-icon">shopping_bag</span>
+                  <span id="product-count" class="cart-qty position-absolute bottom-0 translate-middle badge rounded-pill bg-secondary">
+                    {{ cart_count }}
+                    <span class="visually-hidden">cart quantity</span>
+                  </span>
+                  </button>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- cart off-canvas  -->
+      <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
+        <div class="offcanvas-header">
+          <div class="offcanvas-subheader">
+            <h2 class="offcanvas-title" id="offcanvasScrollingLabel">
+              Cart (<span class="cart-qty">{{ cart_count }}</span>)
+            </h2>
+          </div>
+          <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <div class="container" id="cart-items">
+            <!-- placeholder for cart -->
+
+            {% include "shoppingwonder/cart.html" %}
+
+          </div>
+          <button class="btn button align-middle" {% if cart_count == 0 %}disabled{% endif %} id="checkout-btn">Check Out</button>
+        </div>
+      </div>
+
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse justify-content-center" id="navbarNavAltMarkup">
+            <div class="navbar-nav align-items-center">
+              <li class="nav-item dropdown user-icon">
+                <a class="nav-link dropdown-toggle {% if 'c' in request.GET %} active {% endif %}" href="{% url 'index' %}" id="navbarDropdown" role="button" aria-expanded="false">
+                  Categories
+                </a>
+                <ul class="user-menu category-menu" aria-labelledby="navbarDropdown">
+                  {% for category in categories %}
+                    <li>
+                      <a class="dropdown-item {% if request.GET.c == category.id|stringformat:'s' %} active {% endif %}" href="{% url 'index' %}?c={{ category.id }}" >
+                        {{ category }}
+                      </a >
+                    </li>
+                  {% endfor %}
+                  <li>
+                  <hr class="dropdown-divider" /></li>
+                  <li>
+                    <a class="dropdown-item" href="{% url 'index' %}">All</a>
+                  </li>
+                </ul>
+              </li>
+              <a class="nav-link {% if request.GET.v == 'new' %} active {% endif %}" href="{% url 'index' %}?v=new">
+                New
+              </a>
+              <a class="nav-link {% if request.GET.v == 'best' %} active {% endif %}" href="{% url 'index' %}?v=best">
+                Best Sellers
+              </a>
+              <a class="nav-link {% if request.path == '/contact' %} active {% endif %}" href="{% url 'contact' %}">
+                Contact
+              </a>
+              <!-- Search box -->
+              <div class="nav-link" >
+                <form id="search-form" method="GET" action="{% url 'index' %}?q">
+                  <button class="search-icon" type="submit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search search-icon" viewBox="0 0 16 16" >
+                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
+                  </button>
+                  <input id="search-input" type="text" name="q" placeholder="Search our shop" class="form-3" autofocus>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    {% block body %}{% endblock %}
+
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+  </body>
+</html>

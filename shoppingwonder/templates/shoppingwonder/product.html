@@ -1,0 +1,136 @@
+{% extends "shoppingwonder/layout.html" %}
+{% load humanize static martortags %}
+
+{% block title %}
+    Product
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'shoppingwonder/product.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="container page">
+        <div class="row g-0">
+            <!-- Images -->
+            <div class="col-md-6">
+                <div id="carousel-{{ parent.id }}" class="carousel slide parent {% if parent.children.count > 0 %} d-none {% endif %}"
+                    data-bs-interval="false">
+                    <!-- Parent images -->
+                    <div class="carousel-inner">
+                        {% for image in parent.images.all %}
+                                <div class="carousel-item {% if forloop.counter == 1 %} active {% endif %}">
+                                    <img src="{{ image.imageURL }}" class="d-block w-100" alt="...">
+                                </div>
+                                <button class="carousel-control-prev {% if parent.images.count == 1 %} visually-hidden {% endif %}" type="button" data-bs-target="#carousel-{{ parent.id }}" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next{% if parent.images.count == 1 %} visually-hidden {% endif %}" type="button" data-bs-target="#carousel-{{ parent.id }}" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Children images -->
+                {% for child in parent.children.all %}
+                    <div id="carousel-{{ child.id }}" class="carousel slide children {% if forloop.counter != 1 %} d-none {% endif %}"
+                        data-child-id="{{ child.id }}" data-bs-interval="false">
+                        <div class="carousel-inner">
+                            {% for image in child.images.all %}
+                                <div class="carousel-item {% if forloop.counter == 1 %} active {% endif %}">
+                                    <img src="{{ image.imageURL }}" class="d-block w-100" alt="...">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control-prev {% if child.images.count == 1 %} visually-hidden {% endif %}" type="button" data-bs-target="#carousel-{{ child.id }}" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next {% if child.images.count == 1 %} visually-hidden {% endif %}" type="button" data-bs-target="#carousel-{{ child.id }}" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Text -->
+            <div class="col-md-6 product-text">
+                <div class="title mb-3">
+                    <h1 class="text-break">
+                        {{ parent.title }}
+                        {% if user.is_authenticated %}
+                            <!-- Add to or remove from Favorites -->
+                            {% if fav_toggle %}
+                                <button id="fav-toggle" class="heart-btn" type="submit" data-parent-id="{{ parent.id }}">
+                                    <span class="material-icons-outlined big-icons heart-full fav-toggle"></span>
+                                </button>
+                            {% else %}
+                                <button id="fav-toggle" class="heart-btn" type="submit" data-parent-id="{{ parent.id }}">
+                                    <span class="material-icons-outlined big-icons heart fav-toggle"></span>
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                    </h1>
+                </div>
+
+                <div class="prices mb-3">
+                    <!-- Parent price -->
+                    <div class="parent">
+                        <h3>฿{{ parent.RSP|intcomma }}</h3>
+                    </div>
+                    {% for child in parent.children.all %}
+                    <!-- Children prices -->
+                        <div id="price-{{ child.id }}" class="children d-none" data-child-id="{{ child.id }}">
+                            <h3>฿{{ child.RSP|intcomma }}</h3>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Options -->
+                <div class="options mb-3">
+                    {% if parent.children.count > 0 %}
+                        {% for child in parent.children.all %}
+                            {% if child.remaining_qty == 0 or child.remaining_qty == None %}
+                                <input type="radio" class="btn-check" name="variations" id="option-{{ child.id }}" autocomplete="off" disabled>
+                            {% else %}
+                                <input type="radio" class="btn-check" name="variations" id="option-{{ child.id }}" value="{{ child.id }}"
+                                    data-child-id="{{ child.id }}" autocomplete="off"
+                                    {% if forloop.counter == 1 %} checked {% endif %}>
+                            {% endif %}
+                            <label class="btn btn-secondary" for="option-{{ child.id }}">
+                                {{ child.variations.all|join:" - " }}
+                            </label>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Check parent option if no children -->
+                        <input type="radio" class="btn-check visually-hidden" name="variations" id="option-{{ parent.id }}" value="{{ parent.id }}" checked>
+                    {% endif %}
+                </div>
+
+                <!-- Cart button -->
+                {% if user.is_authenticated %}
+                    <div class="cart-btn mb-3">
+                        {% if parent.remaining_qty == 0 or parent.remaining_qty == None %}
+                            <!-- Disable button if remaining stock is zero -->
+                            <button class="btn button disabled"><span class="align-middle">Sold Out</span></button>
+                        {% else %}
+                            <!-- otherwise, allow Add to Bag -->
+                            <button class="btn button" id="cart-btn"><span class="align-middle">Add to Bag</span><span class=" align-middle material-icons-outlined big-icons cart-icon">shopping_bag</span></button>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn button align-middle">Log in to buy</a>
+                {% endif %}
+
+                <!-- Product details -->
+                <div class="product-details">
+                    <div>{{ parent.details|safe_markdown }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
