@@ -8,11 +8,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
-from django.db.models import Sum, Avg, Count, Q
+from django.db.models import Sum, Avg, Count, Q, OuterRef, Subquery
 from django.core.paginator import Paginator
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import RequestContext
 from django.template.loader import render_to_string
+import time
 
 from .models import *
 from .context_processors import cart as user_cart
@@ -117,7 +118,7 @@ def index(request):
     try:
         search = request.GET.get("q")
 
-        # Get last 3 of products created
+        # Search product with title containing the search value
         products = products.filter(title__icontains=search)
         category_name = "Search results for: "+search
 
@@ -214,80 +215,299 @@ def favorites(request):
 @csrf_exempt
 @login_required(login_url="login")
 def cart(request, product_id, action):
-    if action not in ["add", "remove"]:
-        return JsonResponse({}, status=400)
-
-    try:
-        # Get the product with its remaining quantity > 0
-        product = Product.objects.get(pk=product_id, remaining_qty__gt=0)
-
-        # If product record exists in user's cart, add product quantity by 1
-        try:
-            cart = CartItem.objects.get(shopper=request.user, product=product_id)
-            if action == "add" and product.remaining_qty > cart.quantity:
-                cart.quantity = cart.quantity + 1
-                cart.save()
-            if action == "remove":
-                cart.quantity = cart.quantity - 1
-                cart.save()
-                if cart.quantity == 0:
-                    cart.delete()
-            return get_cart_response(request)
-
-        # Otherwise, create a new product record with quantity of 1
-        except ObjectDoesNotExist:
-            if action == "add":
-                CreateProduct = CartItem(shopper=request.user, product=product, quantity=1)
-                CreateProduct.save()
-                return get_cart_response(request)
-
+    if request.method == "PUT":
+        if action not in ["add", "remove"]:
             return JsonResponse({}, status=400)
 
-    except ObjectDoesNotExist:
-        return JsonResponse({}, status=400)
+        try:
+            # Get the product with its remaining quantity > 0
+            product = Product.objects.get(pk=product_id, remaining_qty__gt=0)
+
+            # If product record exists in user's cart, add product quantity by 1
+            try:
+                cart = CartItem.objects.get(shopper=request.user, product=product_id)
+                if action == "add" and product.remaining_qty > cart.quantity:
+                    cart.quantity = cart.quantity + 1
+                    cart.save()
+                if action == "remove":
+                    cart.quantity = cart.quantity - 1
+                    cart.save()
+                    if cart.quantity == 0:
+                        cart.delete()
+                return get_cart_response(request)
+
+            # Otherwise, create a new product record with quantity of 1
+            except ObjectDoesNotExist:
+                if action == "add":
+                    create_product = CartItem(shopper=request.user, product=product, quantity=1)
+                    create_product.save()
+                    return get_cart_response(request)
+
+                return JsonResponse({}, status=400)
+
+        except ObjectDoesNotExist:
+            return JsonResponse({}, status=400)
+
+    else:
+        return render(request, "shoppingwonder/index.html")
 
 
 def get_cart_response(request):
-    context = user_cart(request)
-    cart_page = render_to_string("shoppingwonder/cart.html", context)
-    cart_count = context["cart_count"]
+    cart_context = user_cart(request)
+    cart_page = render_to_string("shoppingwonder/cart.html", cart_context)
+    cart_count = cart_context["cart_count"]
     return JsonResponse({"cartPage": cart_page, "cartCount": cart_count})
+
+
+@csrf_exempt
+@login_required(login_url="login")
+def order(request):
+    if request.method == "POST":
+        # Get cart amount from context
+        cart_context = user_cart(request)
+        cart_amount = cart_context["cart_amount"]
+
+        # Create SO
+        if cart_amount > 0:
+            SO = SalesOrder(customer=request.user, amount=cart_amount)
+            SO.save()
+
+            # Get product and quantity from cart
+            cart_items = CartItem.objects.filter(shopper=request.user)
+
+            for cart_item in cart_items:
+                if cart_item.product.is_sellable():
+                    # Add to Sales Order line items
+                    SO_line = SalesOrderLineItem(sales_order=SO, product=cart_item.product, quantity=cart_item.quantity,
+                        unit_price=cart_item.product.RSP)
+                    SO_line.save()
+
+                    # Reduce product remaining qty and increase sold qty for product and parent (if any)
+                    cart_item.product.adjust_qty(-cart_item.quantity)
+                    cart_item.product.adjust_sold(cart_item.quantity)
+
+                    # To keep track of stock update
+                    quantity = cart_item.quantity
+                    while quantity > 0:
+                        # Get the stock with remaining qty and link to the SO line
+                        stock = Stock.objects.filter(product=cart_item.product, available_for_sales__gt=0).order_by("created").first()
+                        SO_line.stocks.add(stock)
+
+                        # Reduce the stock available and cart qty for sale with the minimum qty between cart qty and stock qty
+                        min_qty = min(quantity, stock.available_for_sales)
+                        quantity -= min_qty
+                        stock.available_for_sales -= min_qty
+                        stock.save()
+
+            # Update SO status to "ordered"
+            SO_status = SalesOrderStatus(sales_order=SO, status="1")
+            SO_status.save()
+
+            # Delete the cart items
+            cart_items.delete()
+            return HttpResponseRedirect(reverse("purchases"))
+
+    return HttpResponseRedirect(reverse("index"))
 
 
 @staff_member_required
 def stocks(request):
     # Get the GET parameter
     view = request.GET.get("v")
-    parents = Product.objects.filter(parent=None).order_by("title")
 
-    children = (
-        Product.objects.exclude(variations__value="Parent")
+    # Get parent products
+    products = (
+        Product.objects.filter(parent=None)
         .annotate(average_cost=Avg("stocks__unit_cost"))
-        .annotate(remaining_qty=Sum("stocks__available_for_sales"))
         .annotate(watchers_count=Count("watchers"))
         .order_by("remaining_qty", "title")
     )
 
-    if view is "in_stock":
+    view_name = "N/A"
+
+    if view == "in_stock" or (view != "out_of_stock" and view != "inactive"):
         # Get active products with remaining stocks
         products = products.filter(active=True, remaining_qty__gt=0)
+        view_name = "In-Stock"
+        return render(
+        request,
+        "shoppingwonder/stocks.html",
+        {"products": products, "view_name": view_name},
+        )
 
-    if view is "out_of_stock":
-        # Get active products that are not Parent with zero or none remaining stocks
+    if view == "out_of_stock":
+        # Get active products with zero remaining stock or none
         products = products.filter(active=True).filter(
             Q(remaining_qty__lte=0) | Q(remaining_qty__isnull=True)
         )
+        view_name = "Out-of-Stock"
 
-    if view is "inactive":
+    if view == "inactive":
         products = products.filter(active=False)
-
-    # for product in products:
-    #     product.name
-    #     product.variations.first()
-    #     image = product.images.first()
+        view_name = "Inactive"
 
     return render(
         request,
-        "shoppingwonder/stock.html",
-        {"stocks": stocks},
+        "shoppingwonder/stocks.html",
+        {"products": products, "view_name": view_name},
     )
+
+
+@staff_member_required
+def sales(request):
+    # Get the GET parameter
+    view = request.GET.get("v")
+
+    # Get all SOs
+    latest_so_status = SalesOrderStatus.objects.filter(sales_order=OuterRef('sales_order')).order_by('-modified')[:1]
+    so_statuses = SalesOrderStatus.objects.filter(id__in=Subquery(latest_so_status.values('id'))).order_by('-sales_order')
+    view_name = "All"
+
+    if view == "to_pay":
+        # Filter status 1 ordered
+        so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.ORDERED)
+        view_name = "To Pay"
+
+    if view == "to_ship":
+        # Filter status 2 paid
+        so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.PAID)
+        view_name = "To Ship"
+
+    if view == "to_receive":
+        # Filter status 3 shipped
+        so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.SHIPPED)
+        view_name = "To Receive"
+
+    if view == "received":
+        # Filter status 4 delivered
+        so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.DELIVERED)
+        view_name = "Completed"
+
+    # Pagination 9 orders/page
+    p = Paginator(so_statuses, 9)
+
+    # Display the first page
+    page = p.page(1)
+
+    # Get the GET parameter "p"
+    try:
+        page_num = int(request.GET.get("p"))
+
+        # If there's get parameter and in the page range, display the requested page
+        page = p.page(page_num)
+
+    except:
+        pass
+
+    return render(
+        request,
+        "shoppingwonder/sales.html",
+        {"so_statuses": page.object_list, "view_name": view_name, "Status": SalesOrderStatus.Status, "page": page},
+    )
+
+
+@login_required(login_url="login")
+def purchases(request):
+    # Get the GET parameter
+    view = request.GET.get("v")
+
+    # Get all SOs with the user as customer
+    latest_so_status = SalesOrderStatus.objects.filter(sales_order__customer=request.user, sales_order=OuterRef('sales_order')).order_by('-modified')[:1]
+    so_statuses = SalesOrderStatus.objects.filter(id__in=Subquery(latest_so_status.values('id'))).order_by('-sales_order')
+    view_name = "All"
+
+    if view == "to_pay":
+        # Filter status 1 ordered
+        so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.ORDERED)
+        view_name = "To Pay"
+
+    if view == "to_ship":
+        # Filter status 2 paid
+        so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.PAID)
+        view_name = "To Ship"
+
+    if view == "to_receive":
+        # Filter status 3 shipped
+        so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.SHIPPED)
+        view_name = "To Receive"
+
+    if view == "received":
+        # Filter status 4 delivered
+        so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.DELIVERED)
+        view_name = "Completed"
+
+    # Pagination 9 orders/page
+    p = Paginator(so_statuses, 9)
+
+    # Display the first page
+    page = p.page(1)
+
+    # Get the GET parameter "p"
+    try:
+        page_num = int(request.GET.get("p"))
+
+        # If there's get parameter and in the page range, display the requested page
+        page = p.page(page_num)
+
+    except:
+        pass
+
+    return render(
+        request,
+        "shoppingwonder/purchases.html",
+        {"so_statuses": page.object_list, "view_name": view_name, "Status": SalesOrderStatus.Status, "page": page},
+    )
+
+
+@csrf_exempt
+@staff_member_required
+def paid(request):
+    if request.method == "POST":
+        # Get sales order pk from form
+        so_num = request.POST["so_num"]
+
+        # Get sales order instance
+        sales_order = SalesOrder.objects.get(pk=so_num)
+
+        # Create a paid status for the sales order
+        if sales_order.get_so_status() == SalesOrderStatus.Status.ORDERED:
+            create_so_status = SalesOrderStatus(sales_order=sales_order, status=SalesOrderStatus.Status.PAID)
+            create_so_status.save()
+    return HttpResponseRedirect(reverse("sales") + "?v=to_ship")
+
+
+@csrf_exempt
+@staff_member_required
+def shipped(request):
+    if request.method == "POST":
+        # Get sales order pk from form
+        so_num = request.POST["so_num"]
+
+        # Get sales order instance
+        sales_order = SalesOrder.objects.get(pk=so_num)
+
+        # Create a shipped status for the sales order
+        if sales_order.get_so_status() == SalesOrderStatus.Status.PAID:
+            create_so_status = SalesOrderStatus(sales_order=sales_order, status=SalesOrderStatus.Status.SHIPPED)
+            create_so_status.save()
+    return HttpResponseRedirect(reverse("sales") + "?v=to_receive")
+
+
+@csrf_exempt
+@login_required(login_url="login")
+def delivered(request):
+    if request.method == "POST":
+        # Get sales order pk from form
+        so_num = request.POST["so_num"]
+
+        # Get sales order instance
+        sales_order = SalesOrder.objects.get(pk=so_num)
+
+        # Create a delivered status for the sales order
+        if sales_order.get_so_status() == SalesOrderStatus.Status.SHIPPED:
+            create_so_status = SalesOrderStatus(sales_order=sales_order, status=SalesOrderStatus.Status.DELIVERED)
+            create_so_status.save()
+
+    return HttpResponseRedirect(reverse("purchases") + "?v=received")
+
+

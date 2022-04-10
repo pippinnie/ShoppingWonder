@@ -1,5 +1,4 @@
 {% load static humanize %}
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -23,7 +22,7 @@
 
   <body>
     <div class="sticky-top">
-      <div class="bd-highlight mt-3 mb-1">
+      <div class="bd-highlight pt-3 mb-1">
         <div class="row">
           <div class="col-sm"></div>
           <div class="col-lg text-center">
@@ -42,12 +41,12 @@
                 <div class="user-menu">
                   {% if user.is_authenticated %}
                     {% if user.is_staff %}
-                      <a class="dropdown-item" href="{% url 'stocks' %}">Stock Management</a>
-                      <a class="dropdown-item" href="#">Sales Order</a>
+                      <a class="dropdown-item" href="{% url 'stocks' %}?v=in_stock">Stock Management</a>
+                      <a class="dropdown-item" href="{% url 'sales' %}">Sales Orders</a>
                       <!-- <a class="dropdown-item" href="#">Report</a> -->
                       <hr class="dropdown-divider" />
                     {% endif %}
-                    <a class="dropdown-item" href="#">My Purchases</a>
+                    <a class="dropdown-item" href="{% url 'purchases' %}">My Purchases</a>
                     <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
                     <hr class="dropdown-divider" />
                     <a class="dropdown-item" href="{% url 'logout' %}">Log Out</a>
@@ -84,7 +83,7 @@
       </div>
 
       <!-- cart off-canvas  -->
-      <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
+      <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-dismiss="" data-bs-backdrop="false" data-bs-keyboard="true" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
         <div class="offcanvas-header">
           <div class="offcanvas-subheader">
             <h2 class="offcanvas-title" id="offcanvasScrollingLabel">
@@ -93,14 +92,21 @@
           </div>
           <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div class="offcanvas-body">
-          <div class="container" id="cart-items">
+        <div class="offcanvas-body" id="cart-items">
             <!-- placeholder for cart -->
 
             {% include "shoppingwonder/cart.html" %}
 
+        </div>
+      </div>
+
+      <!-- Toast message -->
+      <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast" data-bs-autohide="true" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-body d-flex">
+            <span class="me-auto">Product added to bag.</span>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
           </div>
-          <button class="btn button align-middle" {% if cart_count == 0 %}disabled{% endif %} id="checkout-btn">Check Out</button>
         </div>
       </div>
 
@@ -120,7 +126,7 @@
                     <li>
                       <a class="dropdown-item {% if request.GET.c == category.id|stringformat:'s' %} active {% endif %}" href="{% url 'index' %}?c={{ category.id }}" >
                         {{ category }}
-                      </a >
+                      </a>
                     </li>
                   {% endfor %}
                   <li>

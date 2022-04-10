@@ -1,0 +1,89 @@
+{% extends "shoppingwonder/layout.html" %}
+{% load static humanize %}
+
+{% block title %}
+    Stock Management
+{% endblock %}
+
+{% block body %}
+    <div id="in-stock" class="page-narrow">
+        <!-- sub-menu -->
+        <div class="row">
+            <div class="col-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link stock-link {% if request.GET.v == 'in_stock' %} active {% endif %}" href="{% url 'stocks' %}?v=in_stock">In-Stock</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link stock-link {% if request.GET.v == 'out_of_stock' %} active {% endif %}" href="{% url 'stocks' %}?v=out_of_stock">Out-of-Stock</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link stock-link {% if request.GET.v == 'inactive' %} active {% endif %}" href="{% url 'stocks' %}?v=inactive">Inactive</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-9">
+                <h1 class="page-title">{{ view_name }} ({{ products.count }})</h1>
+
+                <ul class="container product-list d-block">
+                    {% for product in products %}
+                        <li class="row mb-3 ">
+                            <div class="col-2">
+                                <a class="img-link d-block" href="{% url 'product' product.id %}"><img class="img-thumbnail" src="{{ product.images.first.imageURL }}"
+                                    width="100px" alt="No image"></a>
+                            </div>
+                            <div class="col-10">
+                                <div class="row">
+                                    <h6><span>{{ product.title }}</span> | <span>฿{{ product.RSP|intcomma }}</span></h6>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-4">
+                                        <span class="material-icons-outlined middle-icon">
+                                            warehouse
+                                        </span>
+                                        Remaining: {{ product.remaining_qty }}
+                                        {% if product.remaining_qty <= product.minQty %}
+                                            <span class="material-icons middle-icon alert-icon">
+                                                warning
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-8">
+                                        <span class="material-icons middle-icon">
+                                            payment
+                                        </span>
+                                        Average cost: ฿{% if product.average_cost is null %}0{% else %}{{ product.average_cost }}{% endif %}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <span class="material-icons-outlined middle-icon">
+                                            visibility
+                                        </span>
+                                        Views: {{ product.views }}
+                                    </div>
+                                    <div class="col-4">
+                                        <span class="material-icons-outlined middle-icon">
+                                            favorite_border
+                                        </span>
+                                        Favorites: {{ product.watchers_count }}
+                                    </div>
+                                    <div class="col-4">
+                                        <span class="material-icons-outlined middle-icon">
+                                            point_of_sale
+                                        </span>
+                                        Sold: {% if product.sold is null %}0{% else %}{{ product.sold }}{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <hr>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+

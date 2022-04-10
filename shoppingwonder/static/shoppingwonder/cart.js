@@ -34,7 +34,7 @@ function addRemove() {
 }
 
 function addToCart(productId) {
-  fetch(`/cart/${productId}/add`, {
+  return fetch(`/cart/${productId}/add`, {
     method: "PUT",
   })
     .then((response) => response.json())

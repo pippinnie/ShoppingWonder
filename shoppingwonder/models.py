@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 from martor.models import MartorField
 from django.contrib import admin
+from django.db.models import Avg
+from decimal import Decimal
 
 # Create your models here.
 class User(AbstractUser):
@@ -51,16 +53,39 @@ class Product(models.Model):
         decimal_places=2, max_digits=6, validators=[MinValueValidator(0.0)]
     )
     watchers = models.ManyToManyField(User, related_name="favorites", blank=True)
-    minQty = models.PositiveIntegerField(null=True, blank=True)
+    minQty = models.PositiveIntegerField(default=0)
     active = models.BooleanField(default=True)
-    remaining_qty = models.PositiveIntegerField()
-    sold = models.PositiveBigIntegerField(null=True, blank=True)
+    remaining_qty = models.PositiveIntegerField(default=0)
+    sold = models.PositiveBigIntegerField(default=0)
     views = models.PositiveBigIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     details = MartorField(blank=True)
 
     def __str__(self):
         return f"{self.id} | {self.title}"
+
+    def adjust_qty(self, qty):
+        # Update product remaining qty
+        self.remaining_qty += qty
+        self.save()
+
+        # Update parent product remaining qty if any
+        if self.parent:
+            self.parent.remaining_qty += qty
+            self.parent.save()
+
+    def adjust_sold(self, qty):
+        # Update product sold qty
+        self.sold += qty
+        self.save()
+
+        # Update parent product sold qty if any
+        if self.parent:
+            self.parent.sold += qty
+            self.parent.save()
+
+    def is_sellable(self):
+        return self.active and (self.remaining_qty > 0)
 
 
 class Image(models.Model):
@@ -135,6 +160,21 @@ class SalesOrder(models.Model):
     def __str__(self):
         return f"{self.id} | Customer: {self.customer}"
 
+    def get_so_status(self):
+        last_status =  self.sales_order_status.order_by("-modified").first()
+        return last_status.status
+
+    def get_total_cost(self):
+        so_line_items = self.sales_order_line_items.all()
+        total_cost = 0
+        for so_line_item in so_line_items:
+            subtotal_cost = so_line_item.get_cost()
+            total_cost += subtotal_cost
+        return total_cost
+
+    def get_total_profit(self):
+        return self.amount - self.get_total_cost()
+
 
 class SalesOrderStatus(models.Model):
     class Meta:
@@ -156,7 +196,7 @@ class SalesOrderStatus(models.Model):
     modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.sales_order} | status: {self.get_status_display()}"
+        return self.get_status_display()
 
 
 class SalesOrderLineItem(models.Model):
@@ -172,6 +212,19 @@ class SalesOrderLineItem(models.Model):
     )
     stocks = models.ManyToManyField(Stock, related_name="sales_order_line_items")
 
-
     def __str__(self):
         return str(self.sales_order)
+
+    def get_amount(self):
+        return self.quantity * self.unit_price
+
+    def get_avg_unit_cost(self):
+        related_stock = self.stocks.aggregate(average_cost=Avg("unit_cost"))
+        return related_stock["average_cost"]
+
+    def get_cost(self):
+        return self.quantity * self.get_avg_unit_cost()
+
+    def get_profit(self):
+        return self.get_amount() - self.get_cost()
+

@@ -1,0 +1,142 @@
+{% extends "shoppingwonder/layout.html" %}
+{% load static humanize %}
+
+{% block title %}
+    My Purchases
+{% endblock %}
+
+{% block body %}
+    <div class="page-narrow">
+        <!-- sub-menu -->
+        <div class="row">
+            <div class="col-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link stock-link {% if request.get_full_path == '/purchases' %} active {% endif %}" href="{% url 'purchases' %}">All</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link stock-link {% if request.GET.v == 'to_pay' %} active {% endif %}" href="{% url 'purchases' %}?v=to_pay">To Pay</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link stock-link {% if request.GET.v == 'to_ship' %} active {% endif %}" href="{% url 'purchases' %}?v=to_ship">To Ship</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link stock-link {% if request.GET.v == 'to_receive' %} active {% endif %}" href="{% url 'purchases' %}?v=to_receive">To Receive</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link stock-link {% if request.GET.v == 'received' %} active {% endif %}" href="{% url 'purchases' %}?v=received">Completed</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-9">
+                <h1 class="page-title">{{ view_name }}</h1>
+                {% for so_status in so_statuses %}
+                    <div class="so-card">
+                        <!-- Header -->
+                        <div class="so-card-header">
+                            <div class="row justify-content-between">
+                                <div class="col-4">
+                                    <div class="row">
+                                        <div class="col-7">Order Number:</div>
+                                        <div class="col-2 text-end"><strong>{{ so_status.sales_order.id }}</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-2 order-status text-center">
+                                    <strong>{{ so_status.get_status_display }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="so-card-body">
+                            {% for line_item in so_status.sales_order.sales_order_line_items.all %}
+                                <div class="order-item">
+                                    <a class="img-link d-block" href="{% url 'product' line_item.product.parent_id|default_if_none:line_item.product.id  %}">
+                                        <div class="row">
+                                            <div class="col-2 d-flex justify-content-center">
+                                                <img class="img-thumbnail order-img" src="{{ line_item.product.images.first.imageURL }}" alt="No image">
+                                            </div>
+                                            <div class="col-10 product-name">
+                                                <span class="text-break product-title-hover">{{ line_item.product.title }}</span>
+                                                <div class="row justify-content-between">
+                                                    <span class="col-2">฿{{ line_item.unit_price|intcomma }}</span>
+                                                    <span class="col-2">x {{ line_item.quantity }}</span>
+                                                    <span class="col-8 text-end">฿{{ line_item.get_amount|intcomma }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+
+                            <!-- Total -->
+                            <div class="row justify-content-end">
+                                <div class="col-2">TOTAL: </div>
+                                <div class="col-2 text-end">
+                                    <div class="order-total"><strong>฿{{ so_status.sales_order.amount|intcomma }}</strong></div>
+                                </div>
+                            </div>
+
+                            <!-- Date details -->
+                            <div class="so-card-footer">
+                                {% for status in so_status.sales_order.sales_order_status.all %}
+                                    <div class="row blockquote-footer">
+                                        <div class="col-2">
+                                            {{ status.get_status_display }} date:
+                                        </div>
+                                        <div class="col">
+                                            {{ status.modified }}
+                                            {% if status.status == Status.DELIVERED %}
+                                                <span class="material-icons-outlined green-icon middle-icon">
+                                                    done
+                                                </span>
+                                             {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+
+                                <!-- Latest SO status -->
+                                {% if so_status.status == Status.ORDERED %}
+                                    <div class="row blockquote-footer">
+                                        <div class="col-10">
+                                            Pending payment confirmation
+                                        </div>
+                                    </div>
+                                {% elif so_status.status == Status.PAID %}
+                                    <div class="row blockquote-footer">
+                                        <div class="col-10 order-latest-status">
+                                            Pending shipping
+                                        </div>
+                                    </div>
+                            </div>
+
+                                <!-- Button to change SO status -->
+                                {% elif so_status.status == Status.SHIPPED %}
+                                    <div class="row mt-1">
+                                        <div class="col-5">
+                                            <form action="{% url 'delivered' %}" method="POST">
+                                                <input type="hidden" name="so_num" value="{{ so_status.sales_order.pk }}">
+                                                <button class="btn button align-middle">
+                                                    Confirm delivery
+                                                    <span class="material-icons-outlined middle-icon">
+                                                        done
+                                                    </span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                        </div>
+                    </div>
+
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% include "shoppingwonder/pagination.html" %}
+
+{% endblock %}
+
+

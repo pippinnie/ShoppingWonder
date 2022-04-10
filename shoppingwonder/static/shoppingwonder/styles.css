@@ -16,6 +16,7 @@ html {
 
 .search-icon {
   border-color: transparent;
+  background-color: white;
 }
 
 .cart-icon {
@@ -40,10 +41,14 @@ a,
 .nav-link,
 .dropdown-item,
 .page-link, .cart,
-.search-icon {
+.search-icon,
+.nav-link:focus {
   color: rgb(110, 36, 160);
   text-align: left;
   text-decoration-line: none;
+}
+
+.dropdown-item, .dropdown-item:focus, .dropdown-item:hover {
   background-color: white;
 }
 
@@ -65,10 +70,12 @@ a:focus,
 .dropdown-item.active, .dropdown-item:active,
 .nav-link.active,
 .nav-link.cart:hover .cart-icon,
-.search-icon:hover {
+.search-icon:hover,
+.stock-link.active,
+.nav-tabs .nav-link.active {
   color: rgb(226, 170, 221);
-  background-color: white;
   box-shadow: none;
+  background-color: white;
 }
 
 .button {
@@ -102,7 +109,7 @@ a:focus,
   position: relative;
 }
 
-.user-icon-icon, .username {
+.user-icon-icon, .username, .middle-icon {
   vertical-align: middle;
 }
 
@@ -139,12 +146,12 @@ button.cart {
 
 .offcanvas-subheader {
   width: 100%;
-  border-bottom: 1px solid;
+  border-bottom: 1px solid lightgrey;
   padding: 10px 0;
 }
 
 .cart-total {
-  border-top: 1px solid;
+  border-top: 1px solid lightgrey;
 }
 
 .category-menu {
@@ -205,7 +212,7 @@ button.cart {
 }
 
 .page-narrow {
-  max-width: 720px;
+  max-width: 1000px;
   padding: 1px 30px;
   margin: 0 auto;
 }
@@ -217,7 +224,8 @@ button.cart {
 .product-list {
   display: flex;
   flex-wrap: wrap;
-  margin: 0 0 0 -1%;
+  margin: 0 0 0 0;
+  padding-inline-start: 0px;
 }
 
 .product-item {
@@ -233,6 +241,11 @@ button.cart {
 
 .product-name {
   color: black;
+  padding-top: 5px;
+}
+
+.product-title-hover:hover {
+  color: rgb(226, 170, 221);
 }
 
 .card {
@@ -300,4 +313,70 @@ button.cart {
 
 .btn-close:focus, .button:focus {
   box-shadow: 0 0 0 0.25rem rgb(226 170 221  / 50%);
+}
+
+.alert-icon {
+  color: rgb(136, 136, 15);
+}
+
+.toast {
+  width: 250px;
+}
+
+.product-card {
+  padding: 5px;
+  margin-bottom: 10px;
+}
+
+.toast-body {
+  background-color:rgb(226, 170, 221);
+}
+
+.so-card {
+  margin: 1.5rem 0;
+}
+
+.so-card-header {
+  border-bottom: 1px solid lightslategrey;
+  padding: 0px 10px;
+}
+
+.order-status {
+  color: rgb(226, 170, 221);
+  padding: 0px 10px;
+}
+
+.so-card-body {
+  background-color: #f8f9fa;
+  padding: 0px 10px;
+}
+
+.order-item {
+  padding: 5px 0px;
+}
+
+.order-img {
+  height: 60px;
+}
+
+.order-total {
+  border-top: 1px solid lightslategray;
+}
+
+.so-card-footer {
+  padding: 10px;
+}
+
+.blockquote-footer {
+  margin-bottom: 0px;
+  color: #6c757d;
+  font-size: 0.75em;
+}
+
+.green-icon {
+  color: green;
+}
+
+.side-menu {
+  top: 167px;
 }

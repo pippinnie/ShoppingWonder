@@ -114,12 +114,12 @@
                 <!-- Cart button -->
                 {% if user.is_authenticated %}
                     <div class="cart-btn mb-3">
-                        {% if parent.remaining_qty == 0 or parent.remaining_qty == None %}
-                            <!-- Disable button if remaining stock is zero -->
-                            <button class="btn button disabled"><span class="align-middle">Sold Out</span></button>
-                        {% else %}
-                            <!-- otherwise, allow Add to Bag -->
+                        {% if parent.is_sellable %}
+                            <!-- allow Add to Bag -->
                             <button class="btn button" id="cart-btn"><span class="align-middle">Add to Bag</span><span class=" align-middle material-icons-outlined big-icons cart-icon">shopping_bag</span></button>
+                        {% else %}
+                            <!-- Disable button if remaining stock is zero or product is inactive-->
+                            <button class="btn button disabled"><span class="align-middle">Sold Out</span></button>
                         {% endif %}
                     </div>
                 {% else %}

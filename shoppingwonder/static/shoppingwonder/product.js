@@ -12,10 +12,19 @@ document.addEventListener("DOMContentLoaded", function () {
     productId = document.querySelector(
       'input[name="variations"]:checked'
     ).value;
-    addToCart(productId);
+    addToCart(productId).then(() => {
+      // Open the cart page
+      // cartPage = document.querySelector("#offcanvasScrolling");
+      // cartOffCanvas = new bootstrap.Offcanvas(cartPage);
+      // cartOffCanvas.show();
+
+      // Show a toast message
+      var toastLiveExample = document.getElementById("liveToast");
+      var toast = new bootstrap.Toast(toastLiveExample);
+      toast.show();
+    });
   });
 });
-
 
 function toggleFav() {
   parent = this.dataset.parentId;
@@ -37,7 +46,6 @@ function toggleFav() {
       }
     });
 }
-
 
 function optionClick() {
   child = this.dataset.childId;
