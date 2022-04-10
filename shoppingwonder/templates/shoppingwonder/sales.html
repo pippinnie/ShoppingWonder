@@ -9,7 +9,7 @@
     <div class="page-narrow">
         <!-- sub-menu -->
         <div class="row">
-            <div class="col-2">
+            <div class="col-4 col-md-3">
                 <ul class="nav flex-column sticky-top side-menu">
                     <li class="nav-item">
                         <a class="nav-link stock-link {% if request.get_full_path == '/sales' %} active {% endif %}" href="{% url 'sales' %}">All</a>
@@ -29,20 +29,20 @@
                 </ul>
             </div>
 
-            <div class="col-9">
+            <div class="col-8 col-md-9">
                 <h1 class="page-title">{{ view_name }}</h1>
                 {% for so_status in so_statuses %}
                     <div class="so-card">
                         <!-- Header -->
                         <div class="so-card-header">
                             <div class="row justify-content-between">
-                                <div class="col-4">
+                                <div class="col-12 col-md-4">
                                     <div class="row">
-                                        <div class="col-7">Order Number:</div>
-                                        <div class="col-2 text-end"><strong>{{ so_status.sales_order.id }}</strong></div>
+                                        <div class="col-6 col-md-9">Order Number:</div>
+                                        <div class="col-6 col-md-2 text-end"><strong>{{ so_status.sales_order.id }}</strong></div>
                                     </div>
                                 </div>
-                                <div class="col-2 order-status text-center">
+                                <div class="col-12 col-md-2 order-status text-center">
                                     <strong>{{ so_status.get_status_display }}</strong>
                                 </div>
                             </div>
@@ -54,27 +54,27 @@
                                 <div class="order-item">
                                     <a class="img-link d-block" href="{% url 'product' line_item.product.parent_id|default_if_none:line_item.product.id  %}">
                                         <div class="row">
-                                            <div class="col-2 d-flex justify-content-center">
+                                            <div class="col-12 col-md-2 d-flex justify-content-center">
                                                 <img class="img-thumbnail order-img" src="{{ line_item.product.images.first.imageURL }}" alt="No image">
                                             </div>
-                                            <div class="col-10 product-name">
+                                            <div class="col-12 col-md-10 product-name">
                                                 <span class="text-break product-title-hover">{{ line_item.product.title }}</span>
                                                 <!-- Subtotal revenue -->
                                                 <div class="row justify-content-between">
-                                                    <span class="col-5">Revenue: ฿{{ line_item.unit_price|intcomma }}</span>
-                                                    <span class="col-1">x {{ line_item.quantity }}</span>
-                                                    <span class="col-5 text-end">฿{{ line_item.get_amount|intcomma }}</span>
+                                                    <span class="col-md-4">Revenue: ฿{{ line_item.unit_price|intcomma }}</span>
+                                                    <span class="col-md-2">x {{ line_item.quantity }}</span>
+                                                    <span class="col-md-6 text-end">฿{{ line_item.get_amount|intcomma }}</span>
                                                 </div>
                                                 <!-- Subtotal cost -->
                                                 <div class="row justify-content-between">
-                                                    <span class="col-5">Cost: -฿{{ line_item.get_avg_unit_cost|floatformat:2|intcomma }}</span>
-                                                    <span class="col-1">x {{ line_item.quantity }}</span>
-                                                    <span class="col-5 text-end">-฿{{ line_item.get_cost|floatformat:2|intcomma }}</span>
+                                                    <span class="col-md-4">Cost: -฿{{ line_item.get_avg_unit_cost|floatformat:2|intcomma }}</span>
+                                                    <span class="col-md-2">x {{ line_item.quantity }}</span>
+                                                    <span class="col-md-6 text-end">-฿{{ line_item.get_cost|floatformat:2|intcomma }}</span>
                                                 </div>
                                                 <!-- Subtotal profit -->
                                                 <div class="row justify-content-end">
-                                                    <div class="col-3">Item profit: </div>
-                                                    <span class="col-3 text-end"><strong>฿{{ line_item.get_profit|floatformat:2|intcomma }}</strong></span>
+                                                    <div class="col-6 col-md-3">Item profit: </div>
+                                                    <span class="col-6 col-md-3 text-end"><strong>฿{{ line_item.get_profit|floatformat:2|intcomma }}</strong></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -84,20 +84,20 @@
 
                             <!-- Total revenue, cost and profit -->
                             <div class="row justify-content-end mt-3">
-                                <div class="col-3">Order Revenue: </div>
-                                <div class="col-3 text-end">
+                                <div class="col-6 col-md-3">Order Revenue: </div>
+                                <div class="col-6 col-md-2 text-end">
                                     <div class="order-total">฿{{ so_status.sales_order.amount|intcomma }}</div>
                                 </div>
                             </div>
                             <div class="row justify-content-end">
-                                <div class="col-3">Order Cost: </div>
-                                <div class="col-3 text-end">
+                                <div class="col-6 col-md-3">Order Cost: </div>
+                                <div class="col-6 col-md-2 text-end">
                                     <div class="">-฿{{ so_status.sales_order.get_total_cost|floatformat:2|intcomma }}</div>
                                 </div>
                             </div>
                             <div class="row justify-content-end">
-                                <div class="col-3">Order Profit: </div>
-                                <div class="col-3 text-end">
+                                <div class="col-6 col-md-3">Order Profit: </div>
+                                <div class="col-6 col-md-2 text-end">
                                     <div class="order-total"><strong>฿{{ so_status.sales_order.get_total_profit|floatformat:2|intcomma }}</strong></div>
                                 </div>
                             </div>
@@ -106,10 +106,10 @@
                             <div class="so-card-footer">
                                 {% for status in so_status.sales_order.sales_order_status.all %}
                                     <div class="row blockquote-footer">
-                                        <div class="col-2">
-                                            {{ status.get_status_display }} date:
+                                        <div class="col-3 col-sm-2">
+                                            {{ status.get_status_display }}:
                                         </div>
-                                        <div class="col">
+                                        <div class="col-8 col-sm-9">
                                             {{ status.modified }}
                                             {% if status.status == Status.DELIVERED %}
                                                 <span class="material-icons-outlined green-icon middle-icon">
@@ -123,7 +123,7 @@
                                 <!-- Latest SO status -->
                                 {% if so_status.status == Status.SHIPPED %}
                                     <div class="row blockquote-footer">
-                                        <div class="col-10">
+                                        <div class="col-11">
                                             Pending delivery confirmation
                                         </div>
                                     </div>
@@ -132,7 +132,7 @@
                                 <!-- Button to change SO status -->
                                 {% elif so_status.status == Status.ORDERED %}
                                     <div class="row mt-1">
-                                        <div class="col-5">
+                                        <div class="col-12 col-md-5">
                                             <form action="{% url 'paid' %}" method="POST">
                                                 <input type="hidden" name="so_num" value="{{ so_status.sales_order.pk }}">
                                                 <button class="btn button align-middle">

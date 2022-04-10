@@ -41,8 +41,8 @@
                 <div class="user-menu">
                   {% if user.is_authenticated %}
                     {% if user.is_staff %}
-                      <a class="dropdown-item" href="{% url 'stocks' %}?v=in_stock">Stock Management</a>
                       <a class="dropdown-item" href="{% url 'sales' %}">Sales Orders</a>
+                      <a class="dropdown-item" href="{% url 'stocks' %}?v=in_stock">Stock Management</a>
                       <!-- <a class="dropdown-item" href="#">Report</a> -->
                       <hr class="dropdown-divider" />
                     {% endif %}
@@ -87,7 +87,7 @@
         <div class="offcanvas-header">
           <div class="offcanvas-subheader">
             <h2 class="offcanvas-title" id="offcanvasScrollingLabel">
-              Cart (<span class="cart-qty">{{ cart_count }}</span>)
+              Shopping Bag (<span class="cart-qty">{{ cart_count }}</span>)
             </h2>
           </div>
           <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>

@@ -78,6 +78,10 @@ a:focus,
   background-color: white;
 }
 
+.navbar-light .navbar-toggler {
+  color: rgba(0,0,0,.1);
+}
+
 .button {
   color: white;
   background-color: rgb(110, 36, 160);
@@ -378,5 +382,7 @@ button.cart {
 }
 
 .side-menu {
-  top: 167px;
+  top: 210px;
+  background-color: transparent;
+  z-index: 0;
 }
