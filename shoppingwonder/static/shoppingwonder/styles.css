@@ -386,3 +386,7 @@ button.cart {
   background-color: transparent;
   z-index: 0;
 }
+
+.order-row {
+  height: 600px;
+}

@@ -1,6 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
   // Toggle product favorite
-  document.querySelector("#fav-toggle").addEventListener("click", toggleFav);
+  var favToggle = document.querySelector("#fav-toggle");
+  if (favToggle) {
+    favToggle.addEventListener("click", toggleFav);
+  }
 
   // Change product options views
   document.querySelectorAll(".btn-check").forEach((button) => {

@@ -383,8 +383,8 @@ def sales(request):
         so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.DELIVERED)
         view_name = "Completed"
 
-    # Pagination 9 orders/page
-    p = Paginator(so_statuses, 9)
+    # Pagination 5 orders/page
+    p = Paginator(so_statuses, 5)
 
     # Display the first page
     page = p.page(1)
@@ -436,8 +436,8 @@ def purchases(request):
         so_statuses = so_statuses.filter(status=SalesOrderStatus.Status.DELIVERED)
         view_name = "Completed"
 
-    # Pagination 9 orders/page
-    p = Paginator(so_statuses, 9)
+    # Pagination 5 orders/page
+    p = Paginator(so_statuses, 5)
 
     # Display the first page
     page = p.page(1)
