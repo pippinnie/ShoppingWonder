@@ -35,7 +35,7 @@ The highlights of the application are:
 **/templates**:  In this path, there are HTML forms mainly styled with Bootstrap.
 
  -  register, login and logout: for user access
- - index: list of active products
+ - index: list of active products with menu to view by category, new items (last 3 products created) and best sellers (top 3 based on quantity sold)
  - layout: main layout of top menu for other files including search and cart placeholder
  - cart: additon cart for layout to be rendered separately when JavaScript is used to update cart quantity
  - pagination: page selection for index, sales and purchases
