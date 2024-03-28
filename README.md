@@ -1,5 +1,5 @@
 # ShoppingWonder
-#### Video Demo: https://youtu.be/SBzHlSS0DQs?si=h1wzDAEZDtPbY_kT
+#### Video Demo: https://youtu.be/cVERsWkSGdE?si=uJcc3c7TuUB-kD0-
 
 ### Description:
 ShoppingWonder is a cosmetics shopping website for customers as well as a stock and customer order management system for the seller or admin. It was developed with Django (including a comprehensive set of models) on the back-end and JavaScript on the front-end. The website is mobile-responsive, especially on its grid-heavy templates.
